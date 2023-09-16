@@ -17,6 +17,7 @@ nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
 nltk.download('stopwords')
 import torch
+import random
 
 
 df = pd.read_excel('D:\My_project\FOSS\learnmate\intents.xlsx')
@@ -79,6 +80,13 @@ Question_tfidf = tfidf.transform([Question_lemma]).toarray()
 cos=1-pairwise_distances(df_tfidf,Question_tfidf,metric='cosine')
 index_value1 = cos.argmax()
 df['text response'].loc[index_value1]
+
+greet_inputs = ('hello','hi','whassup','how are you?')
+greet_responses = ('hi','Hey','Hey There!','There there!!')
+def greet(sentence):
+  for word in sentence.split():
+    if word.lower() in greet_inputs:
+      return random.choice(greet_responses)
 # ###
 
 app = Flask(__name__)
@@ -103,11 +111,17 @@ def get_Chat_response(text):
         if(user_response == 'thank you' or user_response == 'thanks'): 
             return "You are welcome"
         else:
-            lemma = text_normalization(user_response)
-            tf = tfidf.transform([lemma]).toarray()
-            cos=1-pairwise_distances(df_tfidf,tf,metric='cosine')
-            index_value=cos.argmax()
-            return df['text response'].loc[index_value]
+            if(greet(user_response) != None):
+               return greet(user_response)
+            else:
+              lemma = text_normalization(user_response)
+              tf = tfidf.transform([lemma]).toarray()
+              if(tf.any() == 0):
+                 return "Sorry Unable to Understand"
+              else:
+                cos=1-pairwise_distances(df_tfidf,tf,metric='cosine')
+                index_value=cos.argmax()
+                return df['text response'].loc[index_value]
     else:
         return "Good bye"
 
